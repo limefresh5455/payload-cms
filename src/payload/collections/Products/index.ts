@@ -1,17 +1,17 @@
-import type { CollectionConfig } from 'payload/types'
+import type { CollectionConfig } from 'payload/types';
 
-import { admins } from '../../access/admins'
-import { Archive } from '../../blocks/ArchiveBlock'
-import { CallToAction } from '../../blocks/CallToAction'
-import { Content } from '../../blocks/Content'
-import { MediaBlock } from '../../blocks/MediaBlock'
-import { slugField } from '../../fields/slug'
-import { populateArchiveBlock } from '../../hooks/populateArchiveBlock'
-import { checkUserPurchases } from './access/checkUserPurchases'
-import { beforeProductChange } from './hooks/beforeChange'
-import { deleteProductFromCarts } from './hooks/deleteProductFromCarts'
-import { revalidateProduct } from './hooks/revalidateProduct'
-import { ProductSelect } from './ui/ProductSelect'
+import { admins } from '../../access/admins';
+import { Archive } from '../../blocks/ArchiveBlock';
+import { CallToAction } from '../../blocks/CallToAction';
+import { Content } from '../../blocks/Content';
+import { MediaBlock } from '../../blocks/MediaBlock';
+import { slugField } from '../../fields/slug';
+import { populateArchiveBlock } from '../../hooks/populateArchiveBlock';
+import { checkUserPurchases } from './access/checkUserPurchases';
+import { beforeProductChange } from './hooks/beforeChange';
+import { deleteProductFromCarts } from './hooks/deleteProductFromCarts';
+import { revalidateProduct } from './hooks/revalidateProduct';
+import { ProductSelect } from './ui/ProductSelect';
 
 const Products: CollectionConfig = {
   slug: 'products',
@@ -21,7 +21,7 @@ const Products: CollectionConfig = {
     preview: doc => {
       return `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/next/preview?url=${encodeURIComponent(
         `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/products/${doc.slug}`,
-      )}&secret=${process.env.PAYLOAD_PUBLIC_DRAFT_SECRET}`
+      )}&secret=${process.env.PAYLOAD_PUBLIC_DRAFT_SECRET}`;
     },
   },
   hooks: {
@@ -58,9 +58,9 @@ const Products: CollectionConfig = {
         beforeChange: [
           ({ siblingData, value }) => {
             if (siblingData._status === 'published' && !value) {
-              return new Date()
+              return new Date();
             }
-            return value
+            return value;
           },
         ],
       },
@@ -116,6 +116,75 @@ const Products: CollectionConfig = {
               },
               blocks: [CallToAction, Content, MediaBlock, Archive],
             },
+            // New Variant Groups Field
+            {
+              name: 'variantGroups',
+              type: 'array',
+              label: 'Variant Groups',
+              fields: [
+                {
+                  name: 'groupName',
+                  type: 'text',
+                  required: true,
+                  label: 'Group Name (e.g., Size, Color)',
+                },
+                {
+                  name: 'variants',
+                  type: 'array',
+                  label: 'Variants',
+                  fields: [
+                    {
+                      name: 'variantName',
+                      type: 'text',
+                      required: true,
+                      label: 'Variant Name (e.g., Small, Medium, Red, Blue)',
+                    },
+                  ],
+                },
+              ],
+            },
+            // New Variant Combinations Field
+            {
+              name: 'variantCombinations',
+              type: 'array',
+              label: 'Variant Combinations',
+              fields: [
+                {
+                  name: 'sku',
+                  type: 'text',
+                  required: true,
+                  label: 'SKU',
+                },
+                {
+                  name: 'price',
+                  type: 'number',
+                  required: true,
+                  label: 'Price',
+                },
+                {
+                  name: 'quantity',
+                  type: 'number',
+                  label: 'Quantity',
+                },
+                {
+                  name: 'combination',
+                  type: 'array',
+                  label: 'Variant Combination',
+                  fields: [
+                    {
+                      name: 'groupName',
+                      type: 'text',
+                      label: 'Variant Group',
+                    },
+                    {
+                      name: 'variantName',
+                      type: 'text',
+                      label: 'Variant Option',
+                    },
+                  ],
+                },
+              ],
+            },
           ],
         },
       ],
@@ -139,7 +208,7 @@ const Products: CollectionConfig = {
           id: {
             not_in: [id],
           },
-        }
+        };
       },
     },
     slugField(),
@@ -154,6 +223,6 @@ const Products: CollectionConfig = {
       },
     },
   ],
-}
+};
 
-export default Products
+export default Products;
