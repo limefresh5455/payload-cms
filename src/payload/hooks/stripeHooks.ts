@@ -3,9 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Load environment variables
-dotenv.config({
-  path: path.resolve(__dirname, '../../.env'),
-});
+dotenv.config();
 
 // Instantiate the Stripe client
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
@@ -41,7 +39,7 @@ export const beforeChangeHook = async ({ data, operation }) => {
         images: data.image ? [data.image.url] : [],
       });
 
-      // Create a new price instead of updating an existing one
+    }      // Create a new price instead of updating an existing one
       await stripe.prices.create({
         unit_amount: data.price,
         currency: 'usd',
@@ -51,7 +49,7 @@ export const beforeChangeHook = async ({ data, operation }) => {
           interval_count: data.recurringIntervalCount || 1,
         } : undefined,
       });
-    }
+
   } catch (error) {
     console.error("Error interacting with Stripe:", error);
   }

@@ -7,7 +7,6 @@ import { Content } from '../../blocks/Content';
 import { MediaBlock } from '../../blocks/MediaBlock';
 import { slugField } from '../../fields/slug';
 import { populateArchiveBlock } from '../../hooks/populateArchiveBlock';
-import { checkUserPurchases } from './access/checkUserPurchases';
 import { beforeProductChange } from './hooks/beforeChange';
 import { deleteProductFromCarts } from './hooks/deleteProductFromCarts';
 import { revalidateProduct } from './hooks/revalidateProduct';
@@ -111,44 +110,47 @@ const Products: CollectionConfig = {
               name: 'paywall',
               label: 'Paywall',
               type: 'blocks',
-              access: {
-                read: checkUserPurchases,
-              },
               blocks: [CallToAction, Content, MediaBlock, Archive],
             },
-            // New Variant Groups Field
             {
-              name: 'variantGroups',
-              type: 'array',
-              label: 'Variant Groups',
-              fields: [
-                {
-                  name: 'groupName',
-                  type: 'text',
-                  required: true,
-                  label: 'Group Name (e.g., Size, Color)',
-                },
-                {
-                  name: 'variants',
-                  type: 'array',
-                  label: 'Variants',
-                  fields: [
-                    {
-                      name: 'variantName',
-                      type: 'text',
-                      required: true,
-                      label: 'Variant Name (e.g., Small, Medium, Red, Blue)',
-                    },
-                  ],
-                },
-              ],
+              name: 'sku',
+              type: 'text',
+              required: true,
+              label: 'SKU number',
             },
-            // New Variant Combinations Field
             {
               name: 'variantCombinations',
               type: 'array',
               label: 'Variant Combinations',
               fields: [
+                {
+                  name: 'variantGroup',
+                  type: 'relationship',
+                  relationTo: 'variant-groups',
+                  label: 'Variant Group',
+                },
+                {
+                  name: 'variant',
+                  type: 'relationship',
+                  relationTo: 'variants',
+                  label: 'Variant',
+                  admin: {
+                    condition: (_, siblingData) =>
+                      siblingData.variantGroup !== undefined && siblingData.variantGroup !== null,
+                  },
+                  filterOptions: ({ siblingData }) => {
+                    return {
+                      variantGroup: {
+                        equals: siblingData.variantGroup,
+                      },
+                    };
+                  },
+                },
+                {
+                  name: 'title',
+                  type: 'text',
+                  required: true,
+                },
                 {
                   name: 'sku',
                   type: 'text',
@@ -167,21 +169,13 @@ const Products: CollectionConfig = {
                   label: 'Quantity',
                 },
                 {
-                  name: 'combination',
-                  type: 'array',
-                  label: 'Variant Combination',
-                  fields: [
-                    {
-                      name: 'groupName',
-                      type: 'text',
-                      label: 'Variant Group',
-                    },
-                    {
-                      name: 'variantName',
-                      type: 'text',
-                      label: 'Variant Option',
-                    },
-                  ],
+                  name: 'image',
+                  type: 'upload',
+                  relationTo: 'media',
+                },
+                {
+                  name: 'description',
+                  type: 'text',
                 },
               ],
             },
