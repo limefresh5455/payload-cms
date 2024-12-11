@@ -12,7 +12,6 @@ import { ProductHero } from '../../../_heros/Product'
 import { generateMeta } from '../../../_utilities/generateMeta'
 
 // Force this page to be dynamic so that Next.js does not cache it
-// See the note in '../../../[slug]/page.tsx' about this
 export const dynamic = 'force-dynamic'
 
 export default async function Product({ params: { slug } }) {
@@ -21,50 +20,50 @@ export default async function Product({ params: { slug } }) {
   let product: Product | null = null
 
   try {
+    // Fetch product with depth to include variantCombinations relationships
     product = await fetchDoc<Product>({
       collection: 'products',
       slug,
       draft: isDraftMode,
+      depth: 1, // Adjust depth as needed to resolve nested relationships
     })
   } catch (error) {
-    console.error(error) // eslint-disable-line no-console
+    console.error('Error fetching product:', error)
   }
+  console.log('Fetched product:', JSON.stringify(product, null, 2))
 
   if (!product) {
     notFound()
   }
 
-  const { layout, relatedProducts, variantCombinations } = product
+  const { layout, relatedProducts, variantCombinations = [] } = product
 
   return (
     <React.Fragment>
       <ProductHero product={product} />
-      <Blocks blocks={layout} />
-      {product?.enablePaywall && <PaywallBlocks productSlug={slug as string} disableTopPadding />}
-      
       {/* Variant Combinations Section */}
       <div className="variant-selector">
         <h3>Select Variant</h3>
-        {/* Render variant combinations directly */}
-        {variantCombinations && variantCombinations.length > 0 ? (
-          <div>
-            <select>
-              <option value="" disabled>
-                Select a variant
+        {variantCombinations.length > 0 ? (
+          <select>
+            <option value="" disabled>
+              Select a variant
+            </option>
+            {variantCombinations.map((variant) => (
+              <option key={variant.sku} value={variant.sku}>
+                {variant.variantGroup?.title}: {variant.variant?.title} - ${variant.price}
               </option>
-              {variantCombinations.map((variant) => (
-                <option key={variant.sku} value={variant.sku}>
-                  {variant.variantGroup?.title}: {variant.variant?.title} - ${variant.price}
-                </option>
-              ))}
-            </select>
-          </div>
+            ))}
+          </select>
         ) : (
           <p>No variants available for this product.</p>
         )}
       </div>
-
-      {/* Related Products */}
+      <Blocks blocks={layout} />
+      {product?.enablePaywall && (
+        <PaywallBlocks productSlug={slug as string} disableTopPadding />
+      )}
+      {/* Related Products Section */}
       <Blocks
         disableTopPadding
         blocks={[
@@ -95,6 +94,7 @@ export async function generateStaticParams() {
     const products = await fetchDocs('products')
     return products?.map(({ slug }) => slug)
   } catch (error) {
+    console.error('Error fetching product slugs:', error)
     return []
   }
 }
@@ -109,8 +109,11 @@ export async function generateMetadata({ params: { slug } }): Promise<Metadata> 
       collection: 'products',
       slug,
       draft: isDraftMode,
+      depth: 1, // Ensure metadata fetch includes depth
     })
-  } catch (error) {}
+  } catch (error) {
+    console.error('Error generating metadata:', error)
+  }
 
   return generateMeta({ doc: product })
 }

@@ -13,7 +13,61 @@ const queryMap = {
     key: 'Pages',
   },
   products: {
-    query: PRODUCT,
+     query: `
+      fragment VariantDetails on Variant {
+        title
+        id
+      }
+
+      fragment VariantGroupDetails on VariantGroup {
+        title
+        id
+      }
+
+      query GetProduct($slug: String!) {
+        Products(where: { slug: { equals: $slug } }) {
+          docs {
+             id
+            title
+            slug
+            stripeProductID
+			categories {
+			  id
+				title
+				breadcrumbs {
+				  id
+				  label
+				}
+			}
+			  priceJSON
+			  enablePaywall
+			  relatedProducts {
+				id
+				title
+			  }
+			  meta {
+				title
+				description
+				image {
+				  url
+				}
+			  }
+            variantCombinations {
+              title
+              sku
+              price
+              quantity
+              variantGroup {
+                ...VariantGroupDetails
+              }
+              variant {
+                ...VariantDetails
+              }
+            }
+          }
+        }
+      }
+    `,
     key: 'Products',
   },
   orders: {
@@ -27,8 +81,9 @@ export const fetchDoc = async <T>(args: {
   slug?: string
   id?: string
   draft?: boolean
+  depth?: number // Added depth parameter
 }): Promise<T> => {
-  const { collection, slug, draft } = args || {}
+  const { collection, slug, draft, depth = 0 } = args || {}
 
   if (!queryMap[collection]) throw new Error(`Collection ${collection} not found`)
 
@@ -52,6 +107,7 @@ export const fetchDoc = async <T>(args: {
       variables: {
         slug,
         draft,
+        depth, // Pass depth to the GraphQL query
       },
     }),
   })
